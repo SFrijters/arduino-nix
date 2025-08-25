@@ -25,14 +25,13 @@ let
               mkdir -p "$out/$dirName"
               cp -R * "$out/$dirName/"
             '';
-            nativeBuildInputs = [ pkgs.unzip ];
-            src = fetchurl ({
+            src = fetchzip ({
               url = system.url;
             } // (convertHash system.checksum));
           };
     }) versions)) (groupBy ({ name, ... }: name) tools);
   }) packageIndex.packages);
-    
+
   # Platform are installed in $platform_name/hardware/$architecture/$version
   platforms = listToAttrs (map ({ name, platforms, ... }: {
     inherit name;
@@ -57,8 +56,7 @@ let
 
           runHook postInstall
         '';
-        nativeBuildInputs = [ pkgs.unzip ];
-        src = fetchurl ({
+        src = fetchzip ({
           url = url;
         } // (convertHash checksum));
       };
