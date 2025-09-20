@@ -1,28 +1,52 @@
-{ fetchzip, stdenv, lib, libraryIndex, pkgsBuildHost, pkgs, arduinoPackages }:
+{
+  fetchzip,
+  stdenv,
+  lib,
+  libraryIndex,
+  pkgsBuildHost,
+  pkgs,
+  arduinoPackages,
+}:
 
 with builtins;
 let
-  inherit (pkgs.callPackage ./lib.nix {}) convertHash;
-    
-  libraries = mapAttrs (name: versions: listToAttrs (map ({version, url, checksum, ...}: {
-    name = version;
-    value = stdenv.mkDerivation {
-      pname = name;
-      inherit version;
+  inherit (pkgs.callPackage ./lib.nix { }) convertHash;
 
-      installPhase = ''
-        runHook preInstall
+  libraries = mapAttrs (
+    name: versions:
+    listToAttrs (
+      map (
+        {
+          version,
+          url,
+          checksum,
+          ...
+        }:
+        {
+          name = version;
+          value = stdenv.mkDerivation {
+            pname = name;
+            inherit version;
 
-        mkdir -p "$out/libraries/$pname"
-        cp -R * "$out/libraries/$pname/"
+            installPhase = ''
+              runHook preInstall
 
-        runHook postInstall
-      '';
-      nativeBuildInputs = [ pkgs.unzip ];
-      src = fetchurl ({
-        url = url;
-      } // (convertHash checksum));
-    };
-  }) versions)) (groupBy ({ name, ... }: name) libraryIndex.libraries);
+              mkdir -p "$out/libraries/$pname"
+              cp -R * "$out/libraries/$pname/"
+
+              runHook postInstall
+            '';
+            nativeBuildInputs = [ pkgs.unzip ];
+            src = fetchurl (
+              {
+                url = url;
+              }
+              // (convertHash checksum)
+            );
+          };
+        }
+      ) versions
+    )
+  ) (groupBy ({ name, ... }: name) libraryIndex.libraries);
 in
-  libraries
+libraries
