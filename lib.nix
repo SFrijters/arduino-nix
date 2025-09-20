@@ -48,7 +48,7 @@ rec {
   convertHash =
     hash:
     let
-      m = (lib.match "(SHA-256|SHA-1|MD5):(.*)" hash);
+      m = lib.match "(SHA-256|SHA-1|MD5):(.*)" hash;
       algo = lib.elemAt m 0;
       h = lib.elemAt m 1;
     in
