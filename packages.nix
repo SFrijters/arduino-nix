@@ -1,14 +1,13 @@
 { fetchzip, stdenv, lib, packageIndex, pkgsBuildHost, pkgs, arduinoPackages }:
 
-with builtins;
 let
   inherit (pkgsBuildHost.xorg) lndir;
   inherit (pkgs.callPackage ./lib.nix {}) selectSystem convertHash;
 
   # Tools are installed in $platform_name/tools/$name/$version
-  tools = listToAttrs (map ({ name, tools, ... }: {
+  tools = lib.listToAttrs (map ({ name, tools, ... }: {
     inherit name;
-    value = let platformName = name; in mapAttrs (_: versions: listToAttrs (map ({name, version, systems, ...}: {
+    value = let platformName = name; in lib.mapAttrs (_: versions: listToAttrs (map ({name, version, systems, ...}: {
       name = version;
       value = let
         system = selectSystem stdenv.hostPlatform.system systems;
@@ -30,13 +29,13 @@ let
               url = system.url;
             } // (convertHash system.checksum));
           };
-    }) versions)) (groupBy ({ name, ... }: name) tools);
+    }) versions)) (lib.groupBy ({ name, ... }: name) tools);
   }) packageIndex.packages);
     
   # Platform are installed in $platform_name/hardware/$architecture/$version
-  platforms = listToAttrs (map ({ name, platforms, ... }: {
+  platforms = lib.listToAttrs (map ({ name, platforms, ... }: {
     inherit name;
-    value = mapAttrs (architecture: versions: listToAttrs (map ({version, url, checksum, toolsDependencies ? [], ...}: {
+    value = lib.mapAttrs (architecture: versions: lib.listToAttrs (map ({version, url, checksum, toolsDependencies ? [], ...}: {
       name = version;
       value = stdenv.mkDerivation {
         pname = "${name}-${architecture}";
@@ -62,7 +61,7 @@ let
           url = url;
         } // (convertHash checksum));
       };
-    }) versions)) (groupBy ({ architecture, ... }: architecture) platforms);
+    }) versions)) (lib.groupBy ({ architecture, ... }: architecture) platforms);
   }) packageIndex.packages);
 in
 {
