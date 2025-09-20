@@ -1,30 +1,52 @@
-{ stdenv, lib, pkgs, libraryIndex, arduinoPackages }:
+{
+  stdenv,
+  lib,
+  pkgs,
+  libraryIndex,
+  arduinoPackages,
+}:
 
 let
-  inherit (pkgs.callPackage ./lib.nix {}) convertHash;
-    
-  libraries = lib.mapAttrs (name: versions: lib.listToAttrs (lib.map ({version, url, checksum, ...}: {
-    name = version;
-    value = stdenv.mkDerivation {
-      pname = name;
-      inherit version;
+  inherit (pkgs.callPackage ./lib.nix { }) convertHash;
 
-      src = pkgs.fetchurl ({
-        url = url;
-      } // (convertHash checksum));
+  libraries = lib.mapAttrs (
+    name: versions:
+    lib.listToAttrs (
+      lib.map (
+        {
+          version,
+          url,
+          checksum,
+          ...
+        }:
+        {
+          name = version;
+          value = stdenv.mkDerivation {
+            pname = name;
+            inherit version;
 
-      nativeBuildInputs = [ pkgs.unzip ];
+            src = pkgs.fetchurl (
+              {
+                url = url;
+              }
+              // (convertHash checksum)
+            );
 
-      installPhase = ''
-        runHook preInstall
+            nativeBuildInputs = [ pkgs.unzip ];
 
-        mkdir -p "$out/libraries/$pname"
-        cp -R * "$out/libraries/$pname/"
+            installPhase = ''
+              runHook preInstall
 
-        runHook postInstall
-      '';
+              mkdir -p "$out/libraries/$pname"
+              cp -R * "$out/libraries/$pname/"
 
-    };
-  }) versions)) (lib.groupBy ({ name, ... }: name) libraryIndex.libraries);
+              runHook postInstall
+            '';
+
+          };
+        }
+      ) versions
+    )
+  ) (lib.groupBy ({ name, ... }: name) libraryIndex.libraries);
 in
-  libraries
+libraries
