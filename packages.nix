@@ -8,13 +8,12 @@
   arduinoPackages,
 }:
 
-with builtins;
 let
-  inherit (pkgsBuildHost.xorg) lndir;
+  # inherit (pkgsBuildHost.xorg) lndir;
   inherit (pkgs.callPackage ./lib.nix { }) selectSystem convertHash;
 
   # Tools are installed in $platform_name/tools/$name/$version
-  tools = listToAttrs (
+  tools = lib.listToAttrs (
     map (
       { name, tools, ... }:
       {
@@ -23,9 +22,9 @@ let
           let
             platformName = name;
           in
-          mapAttrs (
+          lib.mapAttrs (
             _: versions:
-            listToAttrs (
+            lib.listToAttrs (
               map (
                 {
                   name,
@@ -70,20 +69,20 @@ let
                 }
               ) versions
             )
-          ) (groupBy ({ name, ... }: name) tools);
+          ) (lib.groupBy ({ name, ... }: name) tools);
       }
     ) packageIndex.packages
   );
 
   # Platform are installed in $platform_name/hardware/$architecture/$version
-  platforms = listToAttrs (
+  platforms = lib.listToAttrs (
     map (
       { name, platforms, ... }:
       {
         inherit name;
-        value = mapAttrs (
+        value = lib.mapAttrs (
           architecture: versions:
-          listToAttrs (
+          lib.listToAttrs (
             map (
               {
                 version,
@@ -140,7 +139,7 @@ let
               }
             ) versions
           )
-        ) (groupBy ({ architecture, ... }: architecture) platforms);
+        ) (lib.groupBy ({ architecture, ... }: architecture) platforms);
       }
     ) packageIndex.packages
   );

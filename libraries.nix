@@ -8,13 +8,12 @@
   arduinoPackages,
 }:
 
-with builtins;
 let
   inherit (pkgs.callPackage ./lib.nix { }) convertHash;
 
-  libraries = mapAttrs (
+  libraries = lib.mapAttrs (
     name: versions:
-    listToAttrs (
+    lib.listToAttrs (
       map (
         {
           version,
@@ -47,6 +46,6 @@ let
         }
       ) versions
     )
-  ) (groupBy ({ name, ... }: name) libraryIndex.libraries);
+  ) (lib.groupBy ({ name, ... }: name) libraryIndex.libraries);
 in
 libraries
