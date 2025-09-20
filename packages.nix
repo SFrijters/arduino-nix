@@ -44,37 +44,33 @@ let
     inherit name;
     value = lib.mapAttrs (architecture: versions: lib.listToAttrs (lib.map ({version, url, checksum, toolsDependencies ? [], ...}: {
       name = version;
-      value = stdenv.mkDerivation {
-        pname = "${name}-${architecture}";
-        inherit version;
+      value = let
+        package = stdenv.mkDerivation {
+          pname = "${name}-${architecture}";
+          inherit version;
 
-        src = pkgs.fetchurl ({
-          url = url;
-        } // (convertHash checksum));
+          src = pkgs.fetchurl ({
+            url = url;
+          } // (convertHash checksum));
 
-        nativeBuildInputs = [
-          pkgs.lndir
-          pkgs.unzip
-        ];
+          nativeBuildInputs = [ pkgs.unzip ];
 
-        toolsDependencies = lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
-        passAsFile = [ "toolsDependencies" ];
+          installPhase = let
+            dirName = "packages/${name}/hardware/${architecture}/${version}";
+          in
+            ''
+            runHook preInstall
 
-        installPhase = let
-          dirName = "packages/${name}/hardware/${architecture}/${version}";
-        in
-          ''
-          runHook preInstall
+            mkdir -p "$out/${dirName}"
+            cp -R * "$out/${dirName}/"
 
-          mkdir -p "$out/${dirName}"
-          cp -R * "$out/${dirName}/"
+            runHook postInstall
+          '';
+        };
 
-          for i in $(cat $toolsDependenciesPath); do
-            lndir -silent $i $out
-          done
-
-          runHook postInstall
-        '';
+      in pkgs.symlinkJoin {
+        name = package.pname;
+        paths = [ package ] ++ (lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies);
       };
     }) versions)) (lib.groupBy ({ architecture, ... }: architecture) platforms);
   }) packageIndex.packages);
