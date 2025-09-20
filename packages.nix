@@ -27,9 +27,13 @@ let
 
             installPhase = let
               dirName = "packages/${platformName}/tools/${name}/${version}";
-              in ''
+            in ''
+              runHook preInstall
+
               mkdir -p "$out/${dirName}"
               cp -R * "$out/${dirName}/"
+
+              runHook postInstall
             '';
 
           };
