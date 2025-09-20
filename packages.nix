@@ -53,7 +53,7 @@ let
                           // (convertHash system.checksum)
                         );
 
-                        nativeBuildInputs = [ pkgs.unzip ];
+                        nativeBuildInputs = [ pkgs.unzip pkgs.gzip ];
 
                         installPhase = let
                           dirName = "packages/${platformName}/tools/${name}/${version}";
@@ -112,7 +112,7 @@ let
                       // (convertHash checksum)
                     );
 
-                    nativeBuildInputs = [ pkgs.unzip ];
+                    nativeBuildInputs = [ pkgs.unzip pkgs.gzip ];
 
                     installPhase = let
                       dirName = "packages/${name}/hardware/${architecture}/${version}";
