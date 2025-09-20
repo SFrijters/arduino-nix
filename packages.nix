@@ -46,18 +46,22 @@ let
                         pname = "${platformName}-${name}";
                         inherit version;
 
-                        dirName = "packages/${platformName}/tools/${name}/${version}";
-                        installPhase = ''
-                          mkdir -p "$out/$dirName"
-                          cp -R * "$out/$dirName/"
-                        '';
-                        nativeBuildInputs = [ pkgs.unzip ];
                         src = fetchurl (
                           {
-                            url = system.url;
+                            url = lib.traceVal system.url;
                           }
                           // (convertHash system.checksum)
                         );
+
+                        nativeBuildInputs = [ pkgs.unzip ];
+
+                        installPhase = let
+                          dirName = "packages/${platformName}/tools/${name}/${version}";
+                        in
+                          ''
+                          mkdir -p "$out/${dirName}"
+                          cp -R * "$out/${dirName}/"
+                        '';
                       };
                 }
               ) versions
@@ -86,12 +90,9 @@ let
               }:
               {
                 name = version;
-                value = stdenv.mkDerivation {
-                  pname = "${name}-${architecture}";
-                  inherit version;
-                  dirName = "packages/${name}/hardware/${architecture}/${version}";
+                value = let
 
-                  toolsDependencies = map (
+                  toolsDependencies' = map (
                     {
                       packager,
                       name,
@@ -99,27 +100,38 @@ let
                     }:
                     arduinoPackages.tools.${packager}.${name}.${version}
                   ) toolsDependencies;
-                  passAsFile = [ "toolsDependencies" ];
-                  installPhase = ''
-                    runHook preInstall
 
-                    mkdir -p "$out/$dirName"
-                    cp -R * "$out/$dirName/"
+                  platform = stdenv.mkDerivation {
+                    pname = "${name}-${architecture}";
+                    inherit version;
 
-                    for i in $(cat $toolsDependenciesPath); do
-                      ${lndir}/bin/lndir -silent $i $out
-                    done
+                    src = fetchurl (
+                      {
+                        url = lib.traceVal url;
+                      }
+                      // (convertHash checksum)
+                    );
 
-                    runHook postInstall
-                  '';
-                  nativeBuildInputs = [ pkgs.unzip ];
-                  src = fetchurl (
-                    {
-                      url = url;
-                    }
-                    // (convertHash checksum)
-                  );
-                };
+                    nativeBuildInputs = [ pkgs.unzip ];
+
+                    installPhase = let
+                      dirName = "packages/${name}/hardware/${architecture}/${version}";
+                    in
+                      ''
+                      runHook preInstall
+
+                      mkdir -p "$out/${dirName}"
+                      cp -R * "$out/${dirName}/"
+
+                      runHook postInstall
+                    '';
+
+                  };
+                in
+                  pkgs.symlinkJoin {
+                    name = "${name}-${architecture}";
+                    paths = [ platform ] ++ toolsDependencies';
+                  };
               }
             ) versions
           )
