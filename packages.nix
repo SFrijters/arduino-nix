@@ -19,10 +19,11 @@ let
             pname = "${platformName}-${name}";
             inherit version;
 
-            dirName = "packages/${platformName}/tools/${name}/${version}";
-            installPhase = ''
-              mkdir -p "$out/$dirName"
-              cp -R * "$out/$dirName/"
+            installPhase = let
+              dirName = "packages/${platformName}/tools/${name}/${version}";
+              in ''
+              mkdir -p "$out/${dirName}"
+              cp -R * "$out/${dirName}/"
             '';
             nativeBuildInputs = [ pkgs.unzip ];
             src = pkgs.fetchurl ({
@@ -40,15 +41,17 @@ let
       value = stdenv.mkDerivation {
         pname = "${name}-${architecture}";
         inherit version;
-        dirName = "packages/${name}/hardware/${architecture}/${version}";
 
         toolsDependencies = lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
         passAsFile = [ "toolsDependencies" ];
-        installPhase = ''
+        installPhase = let
+          dirName = "packages/${name}/hardware/${architecture}/${version}";
+        in
+          ''
           runHook preInstall
 
-          mkdir -p "$out/$dirName"
-          cp -R * "$out/$dirName/"
+          mkdir -p "$out/${dirName}"
+          cp -R * "$out/${dirName}/"
 
           for i in $(cat $toolsDependenciesPath); do
             ${lndir}/bin/lndir -silent $i $out
