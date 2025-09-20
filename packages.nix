@@ -43,10 +43,10 @@ let
                       throw "Unsupported platform ${stdenv.hostPlatform.system}"
                     else
                       stdenv.mkDerivation {
-                        pname = "${platformName}-${name}";
+                        pname = lib.traceVal "${platformName}-${name}";
                         inherit version;
 
-                        src = fetchurl (
+                        src = pkgs.fetchurl (
                           {
                             url = lib.traceVal system.url;
                           }
@@ -54,6 +54,10 @@ let
                         );
 
                         nativeBuildInputs = [ pkgs.unzip pkgs.gzip ];
+
+                        preUnpack = ''
+                          command -v tar
+                        '';
 
                         installPhase = let
                           dirName = "packages/${platformName}/tools/${name}/${version}";
@@ -92,20 +96,11 @@ let
                 name = version;
                 value = let
 
-                  toolsDependencies' = map (
-                    {
-                      packager,
-                      name,
-                      version,
-                    }:
-                    arduinoPackages.tools.${packager}.${name}.${version}
-                  ) toolsDependencies;
-
                   platform = stdenv.mkDerivation {
                     pname = "${name}-${architecture}";
                     inherit version;
 
-                    src = fetchurl (
+                    src = pkgs.fetchurl (
                       {
                         url = lib.traceVal url;
                       }
@@ -130,7 +125,17 @@ let
                 in
                   pkgs.symlinkJoin {
                     name = "${name}-${architecture}";
-                    paths = [ platform ] ++ toolsDependencies';
+                    paths = let
+                      toolsDependencies' = map (
+                        {
+                          packager,
+                          name,
+                          version,
+                        }:
+                        arduinoPackages.tools.${packager}.${name}.${version}
+                      ) toolsDependencies;
+                      in
+                        [ platform ] ++ toolsDependencies';
                   };
               }
             ) versions
