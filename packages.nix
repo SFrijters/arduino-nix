@@ -1,7 +1,6 @@
-{ fetchzip, stdenv, lib, packageIndex, pkgsBuildHost, pkgs, arduinoPackages }:
+{ stdenv, lib, pkgs, packageIndex, arduinoPackages }:
 
 let
-  inherit (pkgsBuildHost.xorg) lndir;
   inherit (pkgs.callPackage ./lib.nix {}) selectSystem convertHash;
 
   # Tools are installed in $platform_name/tools/$name/$version
@@ -53,7 +52,10 @@ let
           url = url;
         } // (convertHash checksum));
 
-        nativeBuildInputs = [ pkgs.unzip ];
+        nativeBuildInputs = [
+          pkgs.lndir
+          pkgs.unzip
+        ];
 
         toolsDependencies = lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
         passAsFile = [ "toolsDependencies" ];
@@ -68,7 +70,7 @@ let
           cp -R * "$out/${dirName}/"
 
           for i in $(cat $toolsDependenciesPath); do
-            ${lndir}/bin/lndir -silent $i $out
+            lndir -silent $i $out
           done
 
           runHook postInstall

@@ -1,4 +1,4 @@
-{ fetchzip, stdenv, lib, libraryIndex, pkgsBuildHost, pkgs, arduinoPackages }:
+{ stdenv, lib, pkgs, libraryIndex, arduinoPackages }:
 
 let
   inherit (pkgs.callPackage ./lib.nix {}) convertHash;
