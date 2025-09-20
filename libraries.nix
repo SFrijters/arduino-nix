@@ -9,6 +9,12 @@ let
       pname = name;
       inherit version;
 
+      src = pkgs.fetchurl ({
+        url = url;
+      } // (convertHash checksum));
+
+      nativeBuildInputs = [ pkgs.unzip ];
+
       installPhase = ''
         runHook preInstall
 
@@ -17,10 +23,7 @@ let
 
         runHook postInstall
       '';
-      nativeBuildInputs = [ pkgs.unzip ];
-      src = pkgs.fetchurl ({
-        url = url;
-      } // (convertHash checksum));
+
     };
   }) versions)) (lib.groupBy ({ name, ... }: name) libraryIndex.libraries);
 in

@@ -19,16 +19,19 @@ let
             pname = "${platformName}-${name}";
             inherit version;
 
+            src = pkgs.fetchurl ({
+              url = system.url;
+            } // (convertHash system.checksum));
+
+            nativeBuildInputs = [ pkgs.unzip ];
+
             installPhase = let
               dirName = "packages/${platformName}/tools/${name}/${version}";
               in ''
               mkdir -p "$out/${dirName}"
               cp -R * "$out/${dirName}/"
             '';
-            nativeBuildInputs = [ pkgs.unzip ];
-            src = pkgs.fetchurl ({
-              url = system.url;
-            } // (convertHash system.checksum));
+
           };
     }) versions)) (lib.groupBy ({ name, ... }: name) tools);
   }) packageIndex.packages);
@@ -42,8 +45,15 @@ let
         pname = "${name}-${architecture}";
         inherit version;
 
+        src = pkgs.fetchurl ({
+          url = url;
+        } // (convertHash checksum));
+
+        nativeBuildInputs = [ pkgs.unzip ];
+
         toolsDependencies = lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
         passAsFile = [ "toolsDependencies" ];
+
         installPhase = let
           dirName = "packages/${name}/hardware/${architecture}/${version}";
         in
@@ -59,10 +69,6 @@ let
 
           runHook postInstall
         '';
-        nativeBuildInputs = [ pkgs.unzip ];
-        src = pkgs.fetchurl ({
-          url = url;
-        } // (convertHash checksum));
       };
     }) versions)) (lib.groupBy ({ architecture, ... }: architecture) platforms);
   }) packageIndex.packages);
