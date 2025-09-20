@@ -3,7 +3,7 @@
 let
   inherit (pkgs.callPackage ./lib.nix {}) convertHash;
     
-  libraries = lib.mapAttrs (name: versions: lib.listToAttrs (map ({version, url, checksum, ...}: {
+  libraries = lib.mapAttrs (name: versions: lib.listToAttrs (lib.map ({version, url, checksum, ...}: {
     name = version;
     value = stdenv.mkDerivation {
       pname = name;

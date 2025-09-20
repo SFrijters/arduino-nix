@@ -5,9 +5,9 @@ let
   inherit (pkgs.callPackage ./lib.nix {}) selectSystem convertHash;
 
   # Tools are installed in $platform_name/tools/$name/$version
-  tools = lib.listToAttrs (map ({ name, tools, ... }: {
+  tools = lib.listToAttrs (lib.map ({ name, tools, ... }: {
     inherit name;
-    value = let platformName = name; in lib.mapAttrs (_: versions: listToAttrs (map ({name, version, systems, ...}: {
+    value = let platformName = name; in lib.mapAttrs (_: versions: lib.listToAttrs (lib.map ({name, version, systems, ...}: {
       name = version;
       value = let
         system = selectSystem stdenv.hostPlatform.system systems;
@@ -33,16 +33,16 @@ let
   }) packageIndex.packages);
     
   # Platform are installed in $platform_name/hardware/$architecture/$version
-  platforms = lib.listToAttrs (map ({ name, platforms, ... }: {
+  platforms = lib.listToAttrs (lib.map ({ name, platforms, ... }: {
     inherit name;
-    value = lib.mapAttrs (architecture: versions: lib.listToAttrs (map ({version, url, checksum, toolsDependencies ? [], ...}: {
+    value = lib.mapAttrs (architecture: versions: lib.listToAttrs (lib.map ({version, url, checksum, toolsDependencies ? [], ...}: {
       name = version;
       value = stdenv.mkDerivation {
         pname = "${name}-${architecture}";
         inherit version;
         dirName = "packages/${name}/hardware/${architecture}/${version}";
 
-        toolsDependencies = map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
+        toolsDependencies = lib.map ({packager, name, version}: arduinoPackages.tools.${packager}.${name}.${version}) toolsDependencies;
         passAsFile = [ "toolsDependencies" ];
         installPhase = ''
           runHook preInstall

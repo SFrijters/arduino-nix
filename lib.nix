@@ -3,7 +3,7 @@ let
   alt = a: b: if a == null then b else a;
 in
 rec {
-  latestVersion = attrs: (builtins.head (builtins.sort (a: b: (builtins.compareVersions a.version b.version) == 1) (builtins.attrValues (builtins.mapAttrs (version: value: { inherit version value; }) attrs)))).value;
+  latestVersion = attrs: (lib.head (lib.sort (a: b: (lib.strings.compareVersions a.version b.version) == 1) (lib.attrValues (lib.mapAttrs (version: value: { inherit version value; }) attrs)))).value;
 
   # From tools.go in arduino-cli
   # regexpLinuxArm   = regexp.MustCompile("arm.*-linux-gnueabihf")

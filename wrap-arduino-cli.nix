@@ -7,7 +7,7 @@ let
   let
     inherit (pkgs.callPackage ./lib.nix {}) latestVersion;
 
-    builtinPackages = (map latestVersion (builtins.attrValues pkgs.arduinoPackages.tools.builtin));
+    builtinPackages = (lib.map latestVersion (lib.attrValues pkgs.arduinoPackages.tools.builtin));
 
     userPath = pkgs.symlinkJoin {
       name = "arduino-libraries";
@@ -18,9 +18,9 @@ let
       name = "arduino-data";
       paths = builtinPackages ++ packages ++ [
         # Add some dummy files to keep the CLI happy
-        (pkgs.writeTextDir "inventory.yaml" (builtins.toJSON {}))
-        (pkgs.writeTextDir "package_index.json" (builtins.toJSON {packages = [];}))
-        (pkgs.writeTextDir "library_index.json" (builtins.toJSON {libraries = [];}))
+        (pkgs.writeTextDir "inventory.yaml" (lib.strings.toJSON {}))
+        (pkgs.writeTextDir "package_index.json" (lib.strings.toJSON {packages = [];}))
+        (pkgs.writeTextDir "library_index.json" (lib.strings.toJSON {libraries = [];}))
       ];
       postBuild = ''
         mkdir -p $out/staging
